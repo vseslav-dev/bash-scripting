@@ -27,3 +27,8 @@ echo end
 echo exit
 echo exit
 ) | socat - EXEC:"ssh ${USER}@${SWITCH}",setsid,pty,ctty
+#(ssh root@17.232.9.8 sh) <<_EOF
+#строчка скрипта номер раз
+#строчка скрипта номер два
+#...
+#_EOF
