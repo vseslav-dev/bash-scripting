@@ -1,0 +1,29 @@
+#!/bin/sh
+
+USER=admin
+PASSWORD=cisco
+SWITCH=192.168.90.5
+
+(
+sleep 2
+echo $PASSWORD
+sleep 1
+echo ena
+sleep 1
+echo $PASSWORD
+echo conf t
+for port in `seq 17 24`
+do
+    vlan=$[101-17+$port]
+    cat <<EOF
+int fa0/$port
+switchport mode access 
+switchport access vlan $vlan
+exit
+EOF
+sleep 1
+done
+echo end
+echo exit
+echo exit
+) | socat - EXEC:"ssh ${USER}@${SWITCH}",setsid,pty,ctty
