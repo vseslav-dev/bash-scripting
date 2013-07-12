@@ -1,0 +1,212 @@
+#!/bin/sh 
+#
+# 1.1 Internet Configuration.
+#
+
+INET_IP="188.127.232.218"
+INET_IFACE="eth1"
+INET_BROADCAST="188.127.232.255"
+
+#
+# 1.2 Local Area Network configuration.
+#
+
+LAN_IP="10.4.2.4"
+LAN_IP_RANGE="10.0.0.0/8"
+LAN_IFACE="eth0"
+
+
+LO_IFACE="lo"
+LO_IP="127.0.0.1"
+
+VPN_IFACE='tun0'
+VPN_IP='10.197.0.1'
+VPN_IP_RANGE='10.197.0.0/16'
+VPN_REMOTE_RENGE='172.16.0.0/12'
+#
+# 1.5 IPTables Configuration.
+#
+
+IPTABLES="/sbin/iptables"
+
+######
+# 4.1 Filter table
+#
+
+#
+# 4.1.1 Set policies
+#
+
+$IPTABLES -P INPUT DROP
+$IPTABLES -P OUTPUT DROP
+$IPTABLES -P FORWARD DROP
+
+#
+# Create chain for bad tcp packets
+#
+
+$IPTABLES -N bad_tcp_packets
+
+#
+# Create separate chains for ICMP, TCP and UDP to traverse
+#
+
+$IPTABLES -N allowed
+$IPTABLES -N tcp_packets
+$IPTABLES -N udp_packets
+$IPTABLES -N icmp_packets
+
+#
+# bad_tcp_packets chain
+#
+
+$IPTABLES -A bad_tcp_packets -p tcp --tcp-flags SYN,ACK SYN,ACK \
+-m state --state NEW -j REJECT --reject-with tcp-reset 
+$IPTABLES -A bad_tcp_packets -p tcp ! --syn -m state --state NEW -j LOG \
+--log-prefix "New not syn:"
+$IPTABLES -A bad_tcp_packets -p tcp ! --syn -m state --state NEW -j DROP
+
+#
+# allowed chain
+#
+
+$IPTABLES -A allowed -p TCP --syn -j ACCEPT
+$IPTABLES -A allowed -p TCP -m state --state ESTABLISHED,RELATED -j ACCEPT
+$IPTABLES -A allowed -p TCP -j DROP
+
+#
+# TCP rules allowed TCP incoming connections
+#
+
+$IPTABLES -A tcp_packets -p TCP -s 0/0 --dport 12456 -j allowed
+
+#
+# UDP ports
+#
+$IPTABLES -A udp_packets -p UDP -s 0/0 --destination-port 12457 -j ACCEPT
+$IPTABLES -A udp_packets -p UDP -s 0/0 --destination-port 1194 -j ACCEPT
+
+#
+# ICMP rules
+#
+
+$IPTABLES -A icmp_packets -p ICMP -s 0/0 --icmp-type 8 -j ACCEPT
+$IPTABLES -A icmp_packets -p ICMP -s 0/0 --icmp-type 11 -j ACCEPT
+
+#
+# 4.1.4 INPUT chain
+#
+
+#
+# Bad TCP packets we don't want.
+#
+
+$IPTABLES -A INPUT -p tcp -j bad_tcp_packets
+
+#
+# Rules for special networks not part of the Internet
+#
+
+$IPTABLES -A INPUT -p ALL -i $LAN_IFACE -s $LAN_IP_RANGE -j ACCEPT
+$IPTABLES -A INPUT -p ALL -i $LO_IFACE -s $LO_IP -j ACCEPT
+$IPTABLES -A INPUT -p ALL -i $LO_IFACE -s $LAN_IP -j ACCEPT
+$IPTABLES -A INPUT -p ALL -i $LO_IFACE -s $INET_IP -j ACCEPT
+$IPTABLES -A INPUT -p ALL -i $VPN_IFACE -s $VPN_IP_RANGE -j ACCEPT
+$IPTABLES -A INPUT -p ALL -i $LO_IFACE -s $VPN_IP_RANGE -j ACCEPT
+$IPTABLES -A INPUT -p ALL -i $VPN_IFACE -s $VPN_REMOTE_RENGE -j ACCEPT
+#
+# Rules for incoming packets from the internet.
+#
+
+$IPTABLES -A INPUT -p ALL -d $INET_IP -m state --state ESTABLISHED,RELATED -j ACCEPT
+$IPTABLES -A INPUT -p TCP -i $INET_IFACE -j tcp_packets
+$IPTABLES -A INPUT -p UDP -i $INET_IFACE -j udp_packets
+$IPTABLES -A INPUT -p ICMP -i $INET_IFACE -j icmp_packets
+
+
+#
+# Log weird packets that don't match the above.
+#
+
+#$IPTABLES -A INPUT -m limit --limit 3/minute --limit-burst 3 -j LOG \
+#--log-level DEBUG --log-prefix "IPT INPUT packet died: "
+
+#
+# 4.1.5 FORWARD chain
+#
+
+#
+# Bad TCP packets we don't want
+#
+
+$IPTABLES -A FORWARD -p tcp -j bad_tcp_packets
+
+#
+# Accept the packets we actually want to forward
+#
+$IPTABLES -A FORWARD -i $VPN_IFACE -j ACCEPT
+$IPTABLES -A FORWARD -i $LAN_IFACE -j ACCEPT
+$IPTABLES -A FORWARD -m state --state ESTABLISHED,RELATED -j ACCEPT
+
+#
+# Log weird packets that don't match the above.
+#
+
+#$IPTABLES -A FORWARD -m limit --limit 3/minute --limit-burst 3 -j LOG \
+#--log-level DEBUG --log-prefix "IPT FORWARD packet died: "
+
+#
+# 4.1.6 OUTPUT chain
+#
+
+#
+# Bad TCP packets we don't want.
+#
+
+$IPTABLES -A OUTPUT -p tcp -j bad_tcp_packets
+
+#
+# Special OUTPUT rules to decide which IP's to allow.
+#
+
+$IPTABLES -A OUTPUT -p ALL -s $LO_IP -j ACCEPT
+$IPTABLES -A OUTPUT -p ALL -s $LAN_IP -j ACCEPT
+$IPTABLES -A OUTPUT -p ALL -s $INET_IP -j ACCEPT
+$IPTABLES -A OUTPUT -p ALL -s $VPN_IP -j ACCEPT
+
+#
+# Log weird packets that don't match the above.
+#
+
+#$IPTABLES -A OUTPUT -m limit --limit 3/minute --limit-burst 3 -j LOG \
+#--log-level DEBUG --log-prefix "IPT OUTPUT packet died: "
+
+######
+# 4.2 nat table
+#
+
+
+#
+# Enable simple IP Forwarding and Network Address Translation
+#
+
+$IPTABLES -t nat -A POSTROUTING -o $LAN_IFACE -j SNAT --to-source $LAN_IP
+#
+# 4.2.6 OUTPUT chain
+#
+
+######
+# 4.3 mangle table
+#
+
+###########################################################################
+#
+# 3. /proc set up.
+#
+
+#
+# 3.1 Required proc configuration
+#
+
+#echo "1" > /proc/sys/net/ipv4/ip_forward
+
