@@ -3,7 +3,7 @@
 function change_router {
 	
 	if [[ $STATE = "down" ]] ; then
-		echo -e "\n\n\nstate change $STATE down \n!!!!!!!!!!!!!!!!!!!!!!"
+		echo -e "\n\n\nstate change $STATE down \n!!!!!!!!!!!!!!!!!!!!!!" # >> /var/log/default-gw.log
 		route -n
 
 		while route -n | grep ^0.0.0.0 | grep -q $SECOND_GW ; do
@@ -17,10 +17,10 @@ function change_router {
 		route add default gw $MAIN_GW dev $MAIN_INT metric 1
 		
 		route -n
-		echo -e "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n\n"
+		echo -e "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n\n" # >> /var/log/default-gw.log
 
 	else
-		echo -e "\n\n\nstate change $STATE work\n!!!!!!!!!!!!!!!!!!!!!!!"
+		echo -e "\n\n\nstate change $STATE work\n!!!!!!!!!!!!!!!!!!!!!!!" # >> /var/log/default-gw.log
 		route -n
 		while route -n | grep ^0.0.0.0 | grep -q $MAIN_GW ; do
 			route del default gw $MAIN_GW dev $MAIN_INT
@@ -33,20 +33,20 @@ function change_router {
 		route add default gw $SECOND_GW dev $SECOND_INT metric 1
 
 		route -n
-		echo -e "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n\n"
+		echo -e "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n\n" # >> /var/log/default-gw.log
 	fi
 }
 
 function check_router {
 	int=$1
-	count=$(echo $CHECK_LIST | awk '{print NF}')
+	count=0
 	orig_count=$(echo $CHECK_LIST | awk '{print NF}')
 	for i in $CHECK_LIST ; do
 		if  ping -I $int -c 1 -W 1 -w 1 -q $i > /dev/null  ; then
-			 (( count-- ))
+			 (( count++ ))
 		fi
 	done
-	if (( count > ( orig_count / 2 ) )) ; then
+	if (( count < ( orig_count / 2 ) )) ; then
 		return 1 #вернем false, так как ниодин пинг не вернулся
 	else
 		return 0 #вернем true, так как хотя бы один пинг вернулся
@@ -63,13 +63,16 @@ SECOND_GW="192.168.2.1"
 STATE="work"
 OLD_STATE=$STATE
 
+#####################
+#main function
+
 while true ; do
-	echo "new iteration start"
+	#echo "new iteration start"
 	sleep 5
 
-	echo -e "\n!!!!!!!!!!!!!!!!"
-	echo $STATE
-	echo -e "!!!!!!!!!!!!!!!!\n"
+	#echo -e "\n!!!!!!!!!!!!!!!!"
+	#echo $STATE
+	#echo -e "!!!!!!!!!!!!!!!!\n"
 
 
 	if check_router $MAIN_INT ; then 
