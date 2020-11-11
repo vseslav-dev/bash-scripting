@@ -21,6 +21,13 @@ replacement()
 }
 echo "${array[@]//*/$(replacement)}"
 
+array=(null one two three four)
+echo ${!array[@]}
+
+for i in ${!array[@]}
+do
+	echo "${array[i]}"
+done
 
 exit 0
 
