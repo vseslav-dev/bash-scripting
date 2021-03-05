@@ -8,8 +8,8 @@ function recursive_do()
 		then
 			(cd -- "$d" && recursive_do)
 		fi	
-		#do somthing
-		#do somthing
+		#do somthing rm -f *.doc
+		#do somthing rm -f *.pdf
 	done
 }
 
