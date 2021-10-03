@@ -16,13 +16,15 @@ then
 	exit 1
 fi
 
-for i in  programming Downloads Documents Pictures Videos work
+for i in  hello #programming Downloads Documents Pictures Videos work
 do
 	if [ ! -d "${WORK_DIR}/${i}" ]
 	then
 		echo "directory ${WORK_DIR}/${i} does not exist"
-		exit 1
+		echo "skipping"
+		continue
 	fi
+	echo "archieving ${WORK_DIR}/${i}"
 	tar -czf "${BACKUP_DIR}/${i}_${DATE}.tar.gz" "${WORK_DIR}/${i}"
 	if [ $? -ne 0 ]
 	then
