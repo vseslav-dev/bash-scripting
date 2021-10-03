@@ -16,7 +16,7 @@ then
 	exit 1
 fi
 
-for i in  programming Downloads Documents Pictures Videos work
+for i in  Downloads #Documents # programming Pictures Videos work
 do
 	if [ ! -d "${WORK_DIR}/${i}" ]
 	then

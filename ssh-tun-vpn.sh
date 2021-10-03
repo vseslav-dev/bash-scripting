@@ -1,4 +1,4 @@
-#!/bin/bash -x
+#!/bin/bash
 ########################
 # script does not work #
 ########################
@@ -21,12 +21,7 @@ function get_router_to_remote()
 function get_inet_iface()
 {
 	declare local iface=$(ip route show 2> /dev/null | grep default | awk '{print $5}')
-	if [[ $iface == "" ]]
-	then
-		echo "1"
-	else
-		echo "${iface}"
-	fi
+	echo "${iface}"
 }
 
 function valid_ip()
@@ -87,7 +82,18 @@ fi
 tun_if_num=100
 remote_ip="${1}"
 local_router=$(get_router_to_remote)
+if [ "${local_router}" = "" ]
+then
+	echo "cant get local router"
+	exit 1
+fi
 default_iface=$(get_inet_iface)
+if [ "${default_iface}" = "" ]
+then
+	echo "cant get default iface"
+	exit 1
+fi
+
 echo "tun iface is: tun${tun_if_num}"
 echo "remote ip is: ${remote_ip}"
 echo "local router is: ${local_router}"
