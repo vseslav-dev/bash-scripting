@@ -1,12 +1,29 @@
 #!/bin/bash
 
-BACKUP_DIR=/home/ivr/data
-WORK_DIR=/home/ivr
-DATE=$(date +%Y_%m_%d)
+BACKUP_DIR="/home/ivr/data/backup"
+WORK_DIR="/home/ivr"
+DATE="$(date +%Y_%m_%d)"
 
-for i in  programming #Downloads Documents Pictures Videos work
+if [ ! -d "${BACKUP_DIR}" ]
+then
+	echo "directory ${BACKUP_DIR} does not exist"
+	exit 1
+fi
+
+if ! mount | grep -q "${BACKUP_DIR%/backup}"
+then
+	echo "${BACKUP_DIR%/backup} is not mounted"
+	exit 1
+fi
+
+for i in  programming Downloads Documents Pictures Videos work Music
 do
-	tar czvf "${BACKUP_DIR}/${i}_${DATE}.tar.gz" "${WORK_DIR}/${i}"
+	if [ ! -d "${WORK_DIR}/${i}" ]
+	then
+		echo "directory ${WORK_DIR}/${i} does not exist"
+		exit 1
+	fi
+	tar -czf "${BACKUP_DIR}/${i}_${DATE}.tar.gz" "${WORK_DIR}/${i}"
 	if [ $? -ne 0 ]
 	then
 		echo "error is occurs"
