@@ -16,7 +16,7 @@ then
 	exit 1
 fi
 
-for i in  Downloads #Documents # programming Pictures Videos work
+for i in  Downloads Documents programming Pictures Videos work
 do
 	if [ ! -d "${WORK_DIR}/${i}" ]
 	then
@@ -24,8 +24,8 @@ do
 		echo "skipping"
 		continue
 	fi
-	echo "archieving ${WORK_DIR}/${i}"
-	tar -czf "${BACKUP_DIR}/${i}_${DATE}.tar.gz" "${WORK_DIR}/${i}"
+	echo "archiveing ${WORK_DIR}/${i}"
+	tar -czf "${BACKUP_DIR}/${DATE}_${i}.tar.gz" "${WORK_DIR}/${i}"
 	if [ $? -ne 0 ]
 	then
 		echo "error is occurs"

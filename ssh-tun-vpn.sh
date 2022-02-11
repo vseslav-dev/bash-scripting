@@ -59,9 +59,9 @@ EOF
 	#iptables -t nat -A POSTROUTING -s "${local_tun_ip}" -j SNAT --to-source "${1}"
 }
 
-if [[ $# < 1 ]]
+if [[ $# < 2 ]]
 then
-	echo "usage $0: remote_ssh_server_ip"
+	echo "usage $0: remote_ssh_server_ip remote_ssh_port"
 	exit 1
 fi
 
