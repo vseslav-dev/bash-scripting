@@ -1,0 +1,8 @@
+#!/bin/bash
+while true; do 
+    # Генерируем случайное смещение (от 1 до 32000)
+    OFFSET=$((RANDOM * 100))
+    dd if=/dev/sda of=/dev/null bs=512 count=1 skip=$OFFSET 2>/dev/null
+    sleep 40
+done
+

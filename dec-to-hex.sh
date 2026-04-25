@@ -10,7 +10,7 @@ done
 
 if echo $digit | egrep -q '\<0x[[:xdigit:]]+\>' ; then
 	if (( $quiet == 1 )) ; then
-		echo -ne "hex digit = dec "
+		echo -ne "hex $digit = dec "
 	fi
 	printf '%d\n' $digit
 elif echo $digit | egrep -q '\<[[:digit:]]+\>' ; then

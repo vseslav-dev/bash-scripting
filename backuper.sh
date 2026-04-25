@@ -4,6 +4,7 @@ BACKUP_DIR="/home/ivr/data/backup"
 WORK_DIR="/home/ivr"
 DATE="$(date +%Y_%m_%d)"
 
+
 if [ ! -d "${BACKUP_DIR}" ]
 then
 	echo "directory ${BACKUP_DIR} does not exist"
@@ -16,7 +17,7 @@ then
 	exit 1
 fi
 
-for i in  Downloads Documents programming Pictures Videos work
+for i in Desktop Downloads Documents programming Pictures Videos work .local/bin
 do
 	if [ ! -d "${WORK_DIR}/${i}" ]
 	then
@@ -25,7 +26,7 @@ do
 		continue
 	fi
 	echo "archiveing ${WORK_DIR}/${i}"
-	tar -czf "${BACKUP_DIR}/${DATE}_${i}.tar.gz" "${WORK_DIR}/${i}"
+	tar -czf "${BACKUP_DIR}/${DATE}_${i/\//_}.tar.gz" "${WORK_DIR}/${i}"
 	if [ $? -ne 0 ]
 	then
 		echo "error is occurs"
