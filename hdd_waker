@@ -1,8 +1,29 @@
 #!/bin/bash
-while true; do 
-    # Генерируем случайное смещение (от 1 до 32000)
-    OFFSET=$((RANDOM * 100))
-    dd if=/dev/sda of=/dev/null bs=512 count=1 skip=$OFFSET 2>/dev/null
-    sleep 40
+
+set -x
+
+UUID="8db17d83-c7c6-48d8-9dec-4cbc200d586f"
+WAKE_INTERVAL=100    # Интервал "постукивания" по диску (сек)
+
+echo "Run waker for UUID: $UUID"
+
+UUID_PATH="/dev/disk/by-uuid/$UUID"
+
+if [ ! -e "$UUID_PATH" ]; then
+	echo  "UUID $UUID Not found !!!! exiting..."
+	exit 1
+fi
+
+DEVICE=$(readlink -f "$UUID_PATH")
+DISK_NAME=$(lsblk -no pkname "$DEVICE")
+DISK="/dev/${DISK_NAME:-${DEVICE#/dev/}}"
+
+
+echo "read sector from disk: ${DISK}"
+
+while true ; do
+	OFFSET=$(shuf -i 0-585937500 -n 1)
+	dd if="${DISK}" of=/dev/null ibs=512 count=1 iflag=nocache skip="${OFFSET}" 2> /dev/null
+	sleep "${WAKE_INTERVAL}"
 done
 
