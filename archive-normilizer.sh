@@ -11,7 +11,7 @@ declare -g prog_name="$0"
 function print_msg()
 {
 	local i="$#"
-	printf "\e[0;32m%s: \e[0m" "$prog_name"
+	printf "\e[0;32m%s: \e[0m" "$(basename "${prog_name}")"
 	while (( i > 0 ))
 	do
 		printf "%s" "$1"
